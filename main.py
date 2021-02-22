@@ -267,7 +267,7 @@ def edit_clothes(message, offset = 0, edit = False, msg_id = -1):
 	buttons = []
 
 	for c_id, c_name in db.fetchall():
-		buttons.append({'text': c_name, 'callback': '{"func":"edit","id":' + str(c_id) + '}'})
+		buttons.append({'text': c_name, 'callback': '{"func":"edit","id":' + str(c_id) + ',"o":' + str(offset) + '}'})
 	keyboard = generate_inline_keyboard(buttons)
 
 	if (page == 1):
@@ -435,16 +435,38 @@ def answer(call):
 	elif (data['func'] == 'pp'):
 		edit_clothes(call.message, int(data['o']) - 5, True, call.message.message_id)
 
-	elif (data['func'] == 'edit'):
+	elif (data['func'] == 'edit' or data['func'] == 'rmc_n'):
 		buttons = (
-			{'text': 'Сохранить ✅', 'callback': '{"func":"addc11","id":"' + str(data['id']) + '"}'},
-			{'text': 'Сохранить ✅', 'callback': '{"func":"addc11","id":"' + str(data['id']) + '"}'},
-			{'text': 'Назад 🔙', 'callback': '{"func":"edit_back","id":"' + str(data['id']) + '"}'},
+			{'text': 'Изменить название ✏️', 'callback': '{"func":"edit_name","id":' + str(data['id']) + '}'},
+			{'text': 'Изменить тип ✏️', 'callback': '{"func":"edit_type","id":' + str(data['id']) + '}'},
+			{'text': 'Удалить ❌', 'callback': '{"func":"remove","id":' + str(data['id']) + ',"o":' + str(data['o']) +'}'},
+			{'text': 'Назад 🔙', 'callback': '{"func":"edit_back","id":' + str(data['id']) + ',"o":' + str(data['o']) +'}'},
 		)
 
+		keyboard = generate_inline_keyboard(buttons)
+
+		msg = f'Редактируем {c_name}'
 
 		bot.edit_message_text(chat_id = uuid, message_id = call.message.message_id, text = msg, reply_markup = keyboard, parse_mode = 'html')
 
+	elif (data['func'] == 'edit_back'):
+		edit_clothes(call.message, int(data['o']), True, call.message.message_id)
+
+	elif (data['func'] == 'remove'):
+		buttons = (
+			{'text': 'Да', 'callback': '{"func":"rmc_y","id":' + str(data['id']) + '}'},
+			{'text': 'Назад 🔙', 'callback': '{"func":"rmc_n","id":' + str(data['id']) + ',"o":' + str(data['o']) +'}'},
+		)
+		keyboard = generate_inline_keyboard(buttons)
+		msg = f'Вы уверены что хотите удалить {c_name}?'
+		bot.edit_message_text(chat_id = uuid, message_id = call.message.message_id, text = msg, reply_markup = keyboard, parse_mode = 'html')
+
+	elif (data['func'] == 'rmc_y'):
+		remove_clothes(data['id'])
+		bot.send_message(chat_id = uuid, text = 'Успешно ✅', reply_markup = main_kb)
+		bot.delete_message(chat_id = uuid, message_id = call.message.message_id)
+
+	
 	elif (data['func'] == 'thing_back'):
 		choose_type(uuid, c_name, True, call.message.message_id, data['id'])
 	elif (data['func'] == 'back_to_name'):
