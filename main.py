@@ -248,7 +248,7 @@ def deactivate(message):
 
 	res = db.fetchall()
 
-	bot.send_message(uuid, f"✅ Успешно")
+	send_success(uuid)
 @bot.message_handler(commands=['activate'])
 def activate(message):
 	uuid = message.chat.id
@@ -358,7 +358,7 @@ def schedule(message, edit = False):
 		schedule_time = db_res[7]
 
 		if (schedule_time == None):
-			msg = 'Расписание пока не установлено'
+			msg = 'Расписание пока не установлено. \n\n<i>Расписание — это рекомендации одежды в определённое время. Например, Вы можете настроить расписание так, что Вам автоматически будут приходить рекомендации в будни в 8:00.</i>'
 		else:
 			for num, day in enumerate(db_res[:7]):
 				if (day == 1):
@@ -373,6 +373,7 @@ def schedule(message, edit = False):
 		buttons = (
 			{'text': 'Изменить дни ✏️', 'callback': '{"func":"edit_days"}'},
 			{'text': 'Изменить время ⏰', 'callback': '{"func":"edit_time"}'},
+			{'text': 'Удалить расписание ❌', 'callback': '{"func":"delete_time"}'},
 		)
 
 		keyboard = generate_inline_keyboard(buttons)
@@ -425,7 +426,7 @@ def choose_type(uuid, name, edit=False, msg_id=-1, thing_id=-1):
 def answer(call):
 	uuid = call.message.chat.id
 
-	exceptions = ['np', 'pp', 'edit_days', 'edit_time']
+	exceptions = ['np', 'pp', 'edit_days', 'edit_time', 'delete_time', 'delete_y', 'delete_n']
 
 	if check_active(uuid):
 		data = json.loads(call.data)
@@ -654,7 +655,26 @@ def answer(call):
 			bot.delete_message(chat_id = uuid, message_id = call.message.message_id)
 			bot.send_message(chat_id = uuid, text = msg, reply_markup = no_kb)
 
-		
+		elif (data['func'] == 'delete_time'):
+			buttons = (
+				{'text': 'Да', 'callback': '{"func":"delete_y"}'},
+				{'text': 'Назад 🔙', 'callback': '{"func":"delete_n"}'}
+			)
+			keyboard = generate_inline_keyboard(buttons)
+			msg = 'Вы уверены, что хотите удалить расписание?'
+			bot.edit_message_text(chat_id = uuid, message_id = call.message.message_id, text = msg, reply_markup = keyboard, parse_mode = 'html')
+
+		elif (data['func'] == 'delete_n'):
+			schedule(call.message, True)
+
+		elif (data['func'] == 'delete_y'):
+			st = 'UPDATE wb_schedule SET time = NULL, mon = 0, tue = 0, wed = 0, thu = 0, fri = 0, sat = 0, sun = 0 WHERE user = %s'
+			db.execute(st, [uuid])
+			confirm()
+
+			bot.delete_message(chat_id = uuid, message_id = call.message.message_id)
+			send_success(uuid)
+
 		elif (data['func'] == 'thing_back'):
 			choose_type(uuid, c_name, True, call.message.message_id, data['id'])
 		elif (data['func'] == 'back_to_name'):
@@ -681,16 +701,20 @@ def text(message):
 		elif (text == '✏️ Редактировать одежду'):
 			edit_clothes(message)
 		else:
-			if (screen == 1):
-				set_city(uuid, text)
-			elif (screen == 2):
-				choose_type(uuid, text)
-			elif (screen == 6):
-				set_new_time(uuid, text)
-			elif (screen[0] == 9):
-				save_new_name(uuid, text, screen[1], screen[2])
+			if (isinstance(screen, int)):
+				if (screen == 1):
+					set_city(uuid, text)
+				elif (screen == 2):
+					choose_type(uuid, text)
+				elif (screen == 6):
+					set_new_time(uuid, text)
+				else:
+					send_idk(uuid)
 			else:
-				send_idk(uuid)
+				if (screen[0] == 9):
+					save_new_name(uuid, text, screen[1], screen[2])
+				else:
+					send_idk(uuid)
 
 
 
