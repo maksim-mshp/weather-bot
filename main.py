@@ -84,7 +84,7 @@ def send_weather(uuid):
 			lat = data[0]
 			lon = data[1]
 
-			message = generate_message(lat, lon)
+			message = generate_message(lat, lon, db, uuid)
 			
 			bot.send_message(uuid, message, parse_mode='html', reply_markup = main_kb)
 		else:
@@ -200,7 +200,7 @@ def set_new_time(uuid, time):
 
 		send_success(uuid)
 	else:
-		msg = "❌ Неправильный формат, попробуйте ещё раз. Отправлять нужно строго в формате ЧЧ:ММ"
+		msg = "❌ Неправильный формат, попробуйте ещё раз. Отправлять нужно строго в формате ЧЧ:ММ (по московскому времени)"
 		bot.send_message(uuid, msg, reply_markup = no_kb)
 
 
@@ -650,7 +650,7 @@ def answer(call):
 		elif (data['func'] == 'edit_time'):
 			set_screen(uuid, 6)
 
-			msg = 'Отправьте новое время в формате ЧЧ:ММ'
+			msg = 'Отправьте новое время в формате ЧЧ:ММ (по московскому времени)'
 
 			bot.delete_message(chat_id = uuid, message_id = call.message.message_id)
 			bot.send_message(chat_id = uuid, text = msg, reply_markup = no_kb)
@@ -715,8 +715,6 @@ def text(message):
 					save_new_name(uuid, text, screen[1], screen[2])
 				else:
 					send_idk(uuid)
-
-
 
 bot.polling(none_stop=True)
 

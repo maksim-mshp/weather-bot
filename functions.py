@@ -1,6 +1,7 @@
 import requests
 import json
 from config import *
+from random import choice as rand_arr
 
 def deemojify(text):
 	import re
@@ -114,6 +115,14 @@ def get_clothes(temp, feels_like):
 	else:
 		return (5, False, 5, 2, 3)
 
+def str_from_arr(array):
+    array = list(map(str, array))
+    if (len(array) <= 1):
+        return ''.join(array)
+    elif (len(array) == 2):
+        return array[-2] + ' и ' + array[-1]
+    return ', '.join(array[:-2]) + ', ' + array[-2] + ' и ' + array[-1]
+
 def get_img_url(temp, feels_like, rain, snow):
 	av_temp = int((temp + feels_like) / 2)
 	link = 'https://maksim.cherny.sh/weather_bot_images/'
@@ -146,7 +155,31 @@ def get_img_url(temp, feels_like, rain, snow):
 
 	return (link, sourse)
 
-def get_msg_text(data, snow):
+def get_user_clothes(data, uuid, db):
+	types = ('headdress', 'sweater', 'outerwear', 'pants', 'shoes')
+	result = []
+
+	for item, name in enumerate(types):
+		thing = data['clothes'][name]
+		st = 'SELECT name FROM wb_clothes WHERE type = %s and thing = %s and user = %s'
+		vals = [item, thing, uuid]
+		db.execute(st, vals)
+		tmp = []
+		for elem in db.fetchall():
+			tmp.append(elem[0])
+
+		if (tmp != []):
+			result.append(rand_arr(tmp))
+
+	output = ''
+	for item in result:
+		output += "\n — " + item
+
+	if (result == []):
+		return "\n\nУ вас нет подходящей одежды 😕\nДобавить одежду можно командой /add_clothes"
+	return "\n\n<u><b>Из вашей одежды можно надеть</b></u> " + output
+
+def get_msg_text(data, snow, uuid, db):
 	clothes_desc = []
 
 	text = f"<u><b>Погода:</b></u> сегодня будет {data['weather']['description']}, "
@@ -212,11 +245,12 @@ def get_msg_text(data, snow):
 	if (data['clothes']['umbrella']):
 		clothes_desc.append('взять с собой зонтик или дождевик')
 
-	text += "<u><b>Сегодня стоит надеть</b></u> " + ', '.join(clothes_desc[:-2]) + ', ' + clothes_desc[-2] + ' и ' + clothes_desc[-1]
+	text += "<u><b>Сегодня стоит надеть</b></u> " + str_from_arr(clothes_desc)
+	text += get_user_clothes(data, uuid, db)
 	text += f"\n\nИсточник картинки: <a href='{img_data[1]}'>Unsplash</a>"
 	return text
 
-def generate_message(lat, lon):
+def generate_message(lat, lon, db, uuid):
 	url = f'https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&units=metric&lang=ru&exclude=minutely,daily,alerts&appid={weather_token}'
 	response = requests.get(url)
 	api_data = json.loads(response.text)
@@ -261,7 +295,7 @@ def generate_message(lat, lon):
 	average_data['clothes']['shoes'] = clothes[4]
 
 
-	return get_msg_text(average_data, weather_desc[2])
+	return get_msg_text(average_data, weather_desc[2], uuid, db)
 
 def get_clothes_description(c_type, c_thing):
 	types = ('головной убор', 'верхняя одежда', 'верхняя одежда', 'штаны', 'обувь')
@@ -310,6 +344,4 @@ def get_clothes_description(c_type, c_thing):
 		pass
 
 	return (d_type, d_thing)
-
-
 
