@@ -22,10 +22,12 @@ connection = sql.connect(
     user = db_config['user'],
     password = db_config['password'],
     unix_socket = db_config['unix_socket'],
-    database = db_config['database']
+    database = db_config['database'],
+	autocommit = True
 )
-
 db = connection.cursor()
+
+
 bot = telebot.TeleBot(TOKEN)
 
 main_kb = types.ReplyKeyboardMarkup(True)
@@ -121,7 +123,8 @@ me = singleton.SingleInstance()
 ##################### КОНЕЦ РАСПИСАНИЯ ########################
 
 def confirm():
-	connection.commit()
+	pass
+	# connection.commit()
 
 def set_type(id, ctype):
 	st = "UPDATE wb_clothes set type = %s WHERE id = %s"
