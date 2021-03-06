@@ -1,0 +1,5 @@
+geopy==2.1.0
+requests==2.18.4
+tendo==0.2.15
+mysql_connector_repackaged==0.3.1
+pyTelegramBotAPI==3.7.6

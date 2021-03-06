@@ -9,14 +9,27 @@ from datetime import datetime
 from multiprocessing import *
 import math
 from re import fullmatch as check_re
+import logging
 
 # Импорт настроек (токены + настройки для подключения к БД)
 from config import *
 from functions import *
 
+import inspect
+import os
+import sys
+
 tmp_time = datetime.now()
-print('\n\n')
-print(tmp_time.isoformat(), '– PROGRAMM STARTED!')
+logger = logging.getLogger("tendo.singleton")
+
+def get_script_dir(follow_symlinks=True):
+    if getattr(sys, 'frozen', False): # py2exe, PyInstaller, cx_Freeze
+        path = os.path.abspath(sys.executable)
+    else:
+        path = inspect.getabsfile(get_script_dir)
+    if follow_symlinks:
+        path = os.path.realpath(path)
+    return os.path.dirname(path)
 
 connection = sql.connect(
     user = db_config['user'],
@@ -113,12 +126,24 @@ def send_schedule():
 		active = db.fetchall()[0][0]
 		if (active == 1):
 			send_weather(item[0])
-			print(tmp_time.isoformat(), '– sended to user ' + str(item[0]))
+			logger.warning(tmp_time.isoformat() + ' – sended to user ' + str(item[0]))
 
 p = Process(target=send_schedule)
 p.start()
-    
-me = singleton.SingleInstance()
+
+logger.warning('\n\n' + str(tmp_time.isoformat()) + ' – PROGRAMM STARTED!')
+
+try:
+	me = singleton.SingleInstance()
+except:
+	path = get_script_dir() + "/output.log"
+	with open(path) as f:
+		lines = f.readlines()
+
+	with open(path, "w") as f:
+		f.writelines(lines[:-4])
+	
+	exit()
 
 ##################### КОНЕЦ РАСПИСАНИЯ ########################
 
@@ -220,8 +245,19 @@ def start(message):
 	if (res == []):
 		bot.send_message(uuid, "Здравствуйте! Для продолжения отправьте название своего города или своё местоположение", reply_markup = no_kb)
 
-		st = "INSERT INTO wb_users (tg_id, screen) VALUES (%s, %s)"
-		db.execute(st, [uuid, 1])
+		st = "INSERT INTO wb_users (tg_id, screen, registretedAt, tg_name) VALUES (%s, %s, %s, %s)"
+		usr_d = ''
+		if (message.chat.username != None):
+			usr_d += str(message.chat.username) + '; '
+
+		if (message.chat.first_name != None):
+			usr_d += str(message.chat.first_name) + '; '
+
+		if (message.chat.last_name != None):
+			usr_d += str(message.chat.last_name) + '; '
+
+		reg_time = datetime.now()
+		db.execute(st, [uuid, 1, reg_time.strftime("%Y-%m-%d %H:%M:%S"), usr_d])
 		confirm()
 
 		st = 'INSERT INTO wb_schedule (user) VALUES (%s)'
@@ -229,6 +265,7 @@ def start(message):
 		confirm()
 	
 	else:
+		logger.warning(message)
 		send_weather(uuid)
 @bot.message_handler(content_types=['location'])
 def location(message):
@@ -720,13 +757,3 @@ def text(message):
 					send_idk(uuid)
 
 bot.polling(none_stop=True)
-
-def threadwrap(threadfunc):
-    def wrapper():
-        while True:
-            try:
-                threadfunc()
-            except BaseException as e:
-                th_name = threading.current_thread().name
-                print(f'Падение потока датчика {th_name}, перезапуск...')
-    return wrapper
