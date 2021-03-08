@@ -6,10 +6,11 @@ from telebot import types
 from tendo import singleton
 from geopy.geocoders import Nominatim as geolocation
 from datetime import datetime
-from multiprocessing import *
 import math
 from re import fullmatch as check_re
 import logging
+from threading import Thread
+from time import sleep
 
 # Импорт настроек (токены + настройки для подключения к БД)
 from config import *
@@ -30,6 +31,25 @@ def get_script_dir(follow_symlinks=True):
     if follow_symlinks:
         path = os.path.realpath(path)
     return os.path.dirname(path)
+
+def reconnect():
+	global logger
+	global connection
+	global db
+	while True:
+		current_time = datetime.now()
+		logger.warning(str(current_time.isoformat()) + ' - reconnected to database')
+		connection.close()
+		connection = sql.connect(
+			user = db_config['user'],
+			password = db_config['password'],
+			unix_socket = db_config['unix_socket'],
+			database = db_config['database'],
+			autocommit = True
+		)
+		db = connection.cursor()
+
+		sleep(27000)
 
 connection = sql.connect(
     user = db_config['user'],
@@ -104,32 +124,6 @@ def send_weather(uuid):
 			bot.send_message(uuid, message, parse_mode='html', reply_markup = main_kb)
 		else:
 			send_idk(uuid)
-
-
-def send_schedule():
-	now = datetime.now()
-
-	days_of_week = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-
-	h, m, d = now.hour, now.minute, days_of_week[now.weekday()]	
-	st = 'SELECT user FROM `wb_schedule` WHERE `time` = "%s:%s:00" AND ' + d + ' = 1'
-
-	vals = [h, m]
-	db.execute(st, vals)
-
-	db_res = db.fetchall()
-
-	for item in db_res:
-		st = "SELECT active FROM wb_users WHERE tg_id = %s"
-		vals = [item[0]]
-		db.execute(st, vals)
-		active = db.fetchall()[0][0]
-		if (active == 1):
-			send_weather(item[0])
-			logger.warning(tmp_time.isoformat() + ' – sended to user ' + str(item[0]))
-
-p = Process(target=send_schedule)
-p.start()
 
 logger.warning('\n\n' + str(tmp_time.isoformat()) + ' – PROGRAMM STARTED!')
 
@@ -265,7 +259,6 @@ def start(message):
 		confirm()
 	
 	else:
-		logger.warning(message)
 		send_weather(uuid)
 @bot.message_handler(content_types=['location'])
 def location(message):
@@ -756,4 +749,12 @@ def text(message):
 				else:
 					send_idk(uuid)
 
-bot.polling(none_stop=True)
+def start_bot():
+	bot.polling(none_stop=True)
+
+main_th = Thread(target=start_bot)
+recon_th = Thread(target=reconnect)
+main_th.start()
+recon_th.start()
+main_th.join()
+recon_th.join()

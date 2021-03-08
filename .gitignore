@@ -1,3 +1,4 @@
 config.py
 output.log
+schedule.log
 /__pycache__/*
