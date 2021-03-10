@@ -11,6 +11,7 @@ from re import fullmatch as check_re
 import logging
 from threading import Thread
 from time import sleep
+import traceback
 
 # Импорт настроек (токены + настройки для подключения к БД)
 from config import *
@@ -20,9 +21,6 @@ import inspect
 import os
 import sys
 
-tmp_time = datetime.now()
-logger = logging.getLogger("tendo.singleton")
-
 def get_script_dir(follow_symlinks=True):
     if getattr(sys, 'frozen', False): # py2exe, PyInstaller, cx_Freeze
         path = os.path.abspath(sys.executable)
@@ -31,6 +29,21 @@ def get_script_dir(follow_symlinks=True):
     if follow_symlinks:
         path = os.path.realpath(path)
     return os.path.dirname(path)
+uuid = 0
+tmp_time = datetime.now()
+logger = logging.getLogger("tendo.singleton")
+logger.warning('\n\n' + str(tmp_time.isoformat()) + ' – PROGRAMM STARTED!')
+try:
+	me = singleton.SingleInstance()
+except:
+	path = get_script_dir() + "/output.log"
+	with open(path) as f:
+		lines = f.readlines()
+
+	with open(path, "w") as f:
+		f.writelines(lines[:-4])
+	
+	exit()
 
 def reconnect():
 	global logger
@@ -59,8 +72,6 @@ connection = sql.connect(
 	autocommit = True
 )
 db = connection.cursor()
-
-
 bot = telebot.TeleBot(TOKEN)
 
 main_kb = types.ReplyKeyboardMarkup(True)
@@ -79,7 +90,6 @@ main_kb.row(
 
 no_kb = types.ReplyKeyboardRemove()
 
-##################### НАЧАЛО РАСПИСАНИЯ ########################
 
 def send_success(uuid):
 	bot.send_message(uuid, f"Успешно ✅", reply_markup = main_kb)
@@ -125,21 +135,6 @@ def send_weather(uuid):
 		else:
 			send_idk(uuid)
 
-logger.warning('\n\n' + str(tmp_time.isoformat()) + ' – PROGRAMM STARTED!')
-
-try:
-	me = singleton.SingleInstance()
-except:
-	path = get_script_dir() + "/output.log"
-	with open(path) as f:
-		lines = f.readlines()
-
-	with open(path, "w") as f:
-		f.writelines(lines[:-4])
-	
-	exit()
-
-##################### КОНЕЦ РАСПИСАНИЯ ########################
 
 def confirm():
 	pass
@@ -202,6 +197,8 @@ def set_city(uuid, text):
 	except AttributeError:
 		bot.send_message(uuid, f"Неверно указан город, попробуйте ещё раз ❌", reply_markup = no_kb)
 		set_screen(uuid, 1)
+	except GeocoderUnavailable:
+		pass
 
 def save_new_name(uuid, name, c_id, msg_id):
 	st = 'UPDATE wb_clothes SET name = %s WHERE id = %s'
@@ -228,6 +225,7 @@ def set_new_time(uuid, time):
 
 @bot.message_handler(commands=['start'])
 def start(message):
+	global uuid
 	uuid = message.chat.id
 
 	st = "SELECT * FROM wb_users WHERE tg_id = %s"
@@ -262,6 +260,7 @@ def start(message):
 		send_weather(uuid)
 @bot.message_handler(content_types=['location'])
 def location(message):
+	global uuid
 	uuid = message.chat.id
 	if check_active(uuid):
 		if (get_screen(uuid) == 1):
@@ -271,6 +270,7 @@ def location(message):
 			})
 @bot.message_handler(commands=['deactivate'])
 def deactivate(message):
+	global uuid
 	uuid = message.chat.id
 
 
@@ -284,6 +284,7 @@ def deactivate(message):
 	send_success(uuid)
 @bot.message_handler(commands=['activate'])
 def activate(message):
+	global uuid
 	uuid = message.chat.id
 
 	st = "UPDATE `wb_users` SET `active` = true, `screen` = 0 WHERE `tg_id` = %s"
@@ -296,6 +297,7 @@ def activate(message):
 	send_success(uuid)
 @bot.message_handler(commands=['setlocation'])
 def setlocation(message):
+	global uuid
 	uuid = message.chat.id
 	if check_active(uuid):
 		st = "UPDATE wb_users SET screen = 1 WHERE tg_id = %s"
@@ -307,6 +309,7 @@ def setlocation(message):
 
 @bot.message_handler(commands=['my_clothes'])
 def my_clothes(message):
+	global uuid
 	uuid = message.chat.id
 	if check_active(uuid):
 		st = "SELECT id, name, type, thing FROM wb_clothes WHERE user = %s"
@@ -331,6 +334,7 @@ def my_clothes(message):
 
 @bot.message_handler(commands=['edit_clothes'])
 def edit_clothes(message, offset = 0, edit = False, msg_id = -1):
+	global uuid
 	uuid = message.chat.id
 	if check_active(uuid):
 		st = "SELECT COUNT(id) FROM wb_clothes WHERE user = %s"
@@ -379,6 +383,7 @@ def edit_clothes(message, offset = 0, edit = False, msg_id = -1):
 
 @bot.message_handler(commands=['schedule'])
 def schedule(message, edit = False):
+	global uuid
 	uuid = message.chat.id
 	if check_active(uuid):
 		days_of_week = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье']
@@ -419,6 +424,7 @@ def schedule(message, edit = False):
 
 @bot.message_handler(commands=['add_clothes'])
 def add_clothes(message):
+	global uuid
 	uuid = message.chat.id
 	if check_active(uuid):
 		text = "Введите название вещи"
@@ -457,6 +463,7 @@ def choose_type(uuid, name, edit=False, msg_id=-1, thing_id=-1):
 
 @bot.callback_query_handler(func = lambda call: True)
 def answer(call):
+	global uuid
 	uuid = call.message.chat.id
 
 	exceptions = ['np', 'pp', 'edit_days', 'edit_time', 'delete_time', 'delete_y', 'delete_n']
@@ -717,6 +724,7 @@ def answer(call):
 
 @bot.message_handler(content_types=['text'])
 def text(message):
+	global uuid
 	uuid = message.chat.id
 	screen = get_screen(uuid)
 	text = message.text
@@ -750,7 +758,17 @@ def text(message):
 					send_idk(uuid)
 
 def start_bot():
-	bot.polling(none_stop=True)
+	try:
+		bot.polling(none_stop=True)
+	except:
+		# вывод ошибки в лог
+		exc_type, exc_value, exc_traceback = sys.exc_info()
+		lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+		logger.warning(''.join(line for line in lines))
+
+		msg = '⚠ Произошла неизвестная ошибка, попробуйте позже.'
+		bot.send_message(chat_id = uuid, text = msg, reply_markup = main_kb)
+		start_bot()
 
 main_th = Thread(target=start_bot)
 recon_th = Thread(target=reconnect)
