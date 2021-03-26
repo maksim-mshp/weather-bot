@@ -340,7 +340,7 @@ def edit_clothes(message, offset = 0, edit = False, msg_id = -1):
 	global uuid
 	uuid = message.chat.id
 	if check_active(uuid):
-		st = "SELECT COUNT(id) FROM wb_clothes WHERE user = %s"
+		st = "SELECT COUNT(id) FROM wb_clothes WHERE user = %s AND type IS NOT NULL AND thing IS NOT NULL"
 		vals = [uuid]
 		
 
