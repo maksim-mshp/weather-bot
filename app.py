@@ -106,7 +106,11 @@ def add_clothes():
 				if ('thing' in request.values):
 					c_type = request.values['type'].strip()
 					c_thing = request.values['thing'].strip()
-					c_title = request.values['title']
+					c_title = request.values['title'].strip()
+
+					if (c_title == ''):
+						update_res(403, 'Wrong title')
+						return jsonify(res)
 
 					types = ('headdress', 'outerwear', 'pants', 'shoes')
 					things = (
@@ -207,6 +211,7 @@ def edit_clothes():
 	def update_res(code, description):
 		nonlocal res
 		res['status']['code'] = code
+		res['status']['description'] = description
 		res['status']['description'] = description
 
 	check = check_token(request.values, db)
