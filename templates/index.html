@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+	<meta charset="UTF-8" />
+	<title>Weather Bot API</title>
+	<link rel="stylesheet" href="/weather_bot/api{{ url_for('static', filename='github.css') }}" />
+	<link rel="stylesheet" href="/weather_bot/api{{ url_for('static', filename='prism.css') }}" />
+	<link rel="stylesheet" href="/weather_bot/api{{ url_for('static', filename='style.css') }}" />
+	<script src="/weather_bot/api{{ url_for('static', filename='prism.js') }}"></script>
+</head>
+
+<body class="markdown-body">
+
+	<h1>Weather Bot API</h1>
+	<p>
+		Для работы с API нужно получить токен. Для этого отправите боту
+		команду /get_api_token.<br>
+		Данные можно отправлять как GET, так и POST запросом.
+	</p>
+	<p>
+		Содержание:
+	<nav>
+		<ol>
+			<li><a href="#recommendations">Получение рекомендации</a></li>
+			<li><a href="#clothes">Одежда пользователя</a></li>
+			<li><a href="#add_clothes">Добавление одежды</a></li>
+			<li><a href="#remove_clothes">Удаление одежды</a></li>
+			<li><a href="#edit_clothes">Редактирование одежды</a></li>
+			<li><a href="#set_location">Изменение местоположения</a></li>
+		</ol>
+	</nav>
+	</p>
+
+	<h2 id="recommendations">1. Получение рекомендации</h2>
+	<p>
+		<a
+			href="https://maksim.cherny.sh/weather_bot/api/recommendations">https://maksim.cherny.sh/weather_bot/api/recommendations</a><br />
+	</p>
+	<div class="wrapper">
+		<div>
+			Параметры:
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Ключ</th>
+						<th>Значение</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>token</td>
+						<td>Токен доступа к API</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div>
+			Пример ответа:
+			<pre style="width: 500px;"><code class="language-json">{
+	"recommendations": {
+		"general": {
+			"headdress": "тёплая шапка",
+			"outerwear": "очень тёплая куртка",
+			"pants": "тёплые штаны",
+			"shoes": "сапоги",
+			"sweater": true,
+			"umbrella": false
+		},
+		"personal": [
+			"Супер тёплая куртка",
+			"Очень тёплые ботинки"
+		]
+	},
+	"status": {
+		"code": 200,
+		"description": "OK"
+	},
+	"weather": {
+		"description": "облачно с прояснениями",
+		"feels_like": -44,
+		"humidity": 100,
+		"temp": -39
+	}
+}</code></pre>
+		</div>
+	</div>
+	<h2 id="clothes">2. Одежда пользователя</h2>
+	<p>
+		<a
+			href="https://maksim.cherny.sh/weather_bot/api/clothes">https://maksim.cherny.sh/weather_bot/api/clothes</a><br />
+	</p>
+	<div class="wrapper">
+		<div>
+			Параметры:
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Ключ</th>
+						<th>Значение</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>token</td>
+						<td>Токен доступа к API</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div>
+			Пример ответа:
+			<pre style="width: 500px;"><code class="language-json">{
+	"clothes": [
+		{
+			"id": 117,
+			"thing": "кроссовки",
+			"title": "Оранжевые кроссовки Sketches",
+			"type": "обувь"
+		},
+		{
+			"id": 118,
+			"thing": "кепка",
+			"title": "Бейсболка 🧢",
+			"type": "головной убор"
+		}
+	],
+	"status": {
+		"code": 200,
+		"description": "OK"
+	}
+}</code></pre>
+		</div>
+	</div>
+
+	<h2 id="add_clothes">3. Добавление одежды</h2>
+	<p>
+		<a
+			href="https://maksim.cherny.sh/weather_bot/api/add_clothes">https://maksim.cherny.sh/weather_bot/api/add_clothes</a><br />
+	</p>
+	<div class="wrapper">
+		<div>
+			Параметры:
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Ключ</th>
+						<th>Значение</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>token</td>
+						<td>Токен доступа к API</td>
+					</tr>
+					<tr>
+						<td>title</td>
+						<td>Название вещи</td>
+					</tr>
+					<tr>
+						<td>type</td>
+						<td>Тип вещи, может принимать значения<ul>
+								<li><b>headdress</b> – головной убор</li>
+								<li><b>outerwear</b> – верхняя одежда</li>
+								<li><b>pants</b> – штаны</li>
+								<li><b>shoes</b> – обувь</li>
+							</ul>
+						</td>
+					</tr>
+					<tr>
+						<td>thing</td>
+						<td>Вид вещи, может принимать значения<ul>
+								<li>головной убор
+									<ul>
+										<li><b>warm</b> – тёплая шапка</li>
+										<li><b>winter</b> – зимняя шапка</li>
+										<li><b>hat</b> – шапка</li>
+										<li><b>optional</b> – шапка (можно и без неё)</li>
+										<li><b>cap</b> – кепка</li>
+									</ul>
+								</li>
+								<li>верхняя одежда
+									<ul>
+										<li><b>warm</b> – очень тёплая</li>
+										<li><b>winter</b> – зимняя</li>
+										<li><b>coat</b> – ветровка</li>
+										<li><b>sweater</b> – свитер</li>
+										<li><b>selectable</b> – ветровка/худи</li>
+										<li><b>hoodie</b> – худи</li>
+										<li><b>t-shirt</b> – футболка</li>
+									</ul>
+								</li>
+								<li>штаны
+									<ul>
+										<li><b>warm</b> – тёплые</li>
+										<li><b>jeans</b> – джинсы</li>
+										<li><b>shorts</b> – шорты</li>
+									</ul>
+								</li>
+								<li>обувь
+									<ul>
+										<li><b>warm</b> – сапоги</li>
+										<li><b>boots</b> – ботинки</li>
+										<li><b>selectable</b> – ботинки/кроссовки</li>
+										<li><b>sneakers</b> – кроссовки</li>
+									</ul>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+
+		</div>
+		<div>
+			Пример ответа:
+			<pre style="width: 500px;"><code class="language-json">{
+	"status": {
+		"code": 200,
+		"description": "OK"
+	}
+}</code></pre>
+			<br>
+			Возможные коды ошибок:
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Код</th>
+						<th>Описание</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>403</td>
+						<td>Не указано название вещи</td>
+					</tr>
+					<tr>
+						<td>404</td>
+						<td>Неправильно указан тип оджежды</td>
+					</tr>
+					<tr>
+						<td>405</td>
+						<td>Неправильно указан вид оджежды</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<h2 id="remove_clothes">4. Удаление одежды</h2>
+	<p>
+		<a
+			href="https://maksim.cherny.sh/weather_bot/api/remove_clothes">https://maksim.cherny.sh/weather_bot/api/remove_clothes</a><br />
+	</p>
+	<div class="wrapper">
+		<div>
+			Параметры:
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Ключ</th>
+						<th>Значение</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>token</td>
+						<td>Токен доступа к API</td>
+					</tr>
+					<tr>
+						<td>id</td>
+						<td>Уникальный номер вещи</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div>
+			Пример ответа:
+			<pre style="width: 500px;"><code class="language-json">{
+	"status": {
+		"code": 200,
+		"description": "OK"
+	}
+}</code></pre>
+			<br>
+			Возможные коды ошибок:
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Код</th>
+						<th>Описание</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>406</td>
+						<td>Неправильно указан уникальный номер вещи</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<h2 id="edit_clothes">5. Редактирование одежды</h2>
+	<p>
+		<a
+			href="https://maksim.cherny.sh/weather_bot/api/edit_clothes">https://maksim.cherny.sh/weather_bot/api/edit_clothes</a><br />
+		Допускается отправка только тех параметров, которые нужно отредактировать.<br />
+		Возможные варианты параметров:
+		<ul>
+			<li><code>token, id, title</code></li>
+			<li><code>token, id, type, thing</code></li>
+			<li><code>token, id, title, type, thing</code></li>
+		</ul>
+		
+	</p>
+	<div class="wrapper">
+		<div>
+			Параметры:
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Ключ</th>
+						<th>Значение</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>token</td>
+						<td>Токен доступа к API</td>
+					</tr>
+					<tr>
+						<td>id</td>
+						<td>Уникальный номер вещи</td>
+					</tr>
+					<tr>
+						<td>title</td>
+						<td>Название вещи</td>
+					</tr>
+					<tr>
+						<td>type</td>
+						<td>Тип вещи, может принимать значения<ul>
+								<li><b>headdress</b> – головной убор</li>
+								<li><b>outerwear</b> – верхняя одежда</li>
+								<li><b>pants</b> – штаны</li>
+								<li><b>shoes</b> – обувь</li>
+							</ul>
+						</td>
+					</tr>
+					<tr>
+						<td>thing</td>
+						<td>Вид вещи, может принимать значения<ul>
+								<li>головной убор
+									<ul>
+										<li><b>warm</b> – тёплая шапка</li>
+										<li><b>winter</b> – зимняя шапка</li>
+										<li><b>hat</b> – шапка</li>
+										<li><b>optional</b> – шапка (можно и без неё)</li>
+										<li><b>cap</b> – кепка</li>
+									</ul>
+								</li>
+								<li>верхняя одежда
+									<ul>
+										<li><b>warm</b> – очень тёплая</li>
+										<li><b>winter</b> – зимняя</li>
+										<li><b>coat</b> – ветровка</li>
+										<li><b>sweater</b> – свитер</li>
+										<li><b>selectable</b> – ветровка/худи</li>
+										<li><b>hoodie</b> – худи</li>
+										<li><b>t-shirt</b> – футболка</li>
+									</ul>
+								</li>
+								<li>штаны
+									<ul>
+										<li><b>warm</b> – тёплые</li>
+										<li><b>jeans</b> – джинсы</li>
+										<li><b>shorts</b> – шорты</li>
+									</ul>
+								</li>
+								<li>обувь
+									<ul>
+										<li><b>warm</b> – сапоги</li>
+										<li><b>boots</b> – ботинки</li>
+										<li><b>selectable</b> – ботинки/кроссовки</li>
+										<li><b>sneakers</b> – кроссовки</li>
+									</ul>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div>
+			Пример ответа:
+			<pre style="width: 500px;"><code class="language-json">{
+	"status": {
+		"code": 200,
+		"description": "OK"
+	}
+}</code></pre>
+			<br>
+			Возможные коды ошибок:
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Код</th>
+						<th>Описание</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>406</td>
+						<td>Неправильно указан уникальный номер вещи</td>
+					</tr>
+					<tr>
+						<td>407</td>
+						<td>Не указаны поля для редактирования</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<h2 id="set_location">6. Изменение местоположения</h2>
+	<p>
+		<a
+			href="https://maksim.cherny.sh/weather_bot/api/set_location">https://maksim.cherny.sh/weather_bot/api/set_location</a><br />
+		Допускается отправка либо города, либо координат.<br />
+		Возможные варианты параметров:
+		<ul>
+			<li><code>token, city</code></li>
+			<li><code>token, lat, lon</code></li>
+		</ul>
+		
+	</p>
+	<div class="wrapper">
+		<div>
+			Параметры:
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Ключ</th>
+						<th>Значение</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>token</td>
+						<td>Токен доступа к API</td>
+					</tr>
+					<tr>
+						<td>city</td>
+						<td>Город пользователя</td>
+					</tr>
+					<tr>
+						<td>lat</td>
+						<td>Широта</td>
+					</tr>
+					<tr>
+						<td>lon</td>
+						<td>Долгота</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div>
+			Пример ответа:
+			<pre style="width: 500px;"><code class="language-json">{
+	"status": {
+		"code": 200,
+		"description": "OK"
+	}
+}</code></pre>
+			<br>
+			Возможные коды ошибок:
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Код</th>
+						<th>Описание</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>408</td>
+						<td>Не найден город</td>
+					</tr>
+					<tr>
+						<td>409</td>
+						<td>Не указана широта</td>
+					</tr>
+					<tr>
+						<td>410</td>
+						<td>Не указана долгота</td>
+					</tr>
+					<tr>
+						<td>411</td>
+						<td>Указаны несуществующие координаты</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<div id="upbutton"></div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+	$("body").on('click', '[href*="#"]', function (e) {
+		var fixed_offset = 25;
+		$('html,body').stop().animate({ scrollTop: $(this.hash).offset().top - fixed_offset }, 500);
+		e.preventDefault();
+	});
+
+	$(window).on('scroll', function() {
+        if ($(this).scrollTop() > 100) {
+            if ($('#upbutton').is(':hidden')) {
+                $('#upbutton').css({opacity : 1}).fadeIn('slow');
+            }
+        } else { 
+            $('#upbutton').stop(true, false).fadeOut('fast'); 
+        }
+    });
+    $('#upbutton').on('click', function() {
+        $('html, body').stop().animate({scrollTop : 0}, 500);
+    });
+</script>
+<style>
+	#upbutton {
+    background: url("./api/assets/arrow.png") no-repeat top left;
+    height: 60px;
+    width: 60px;
+    bottom: 50px;
+    right: 50px;
+    cursor: pointer;
+    display: none;
+    position: fixed;
+    z-index: 999;
+	background-size: cover;
+  }
+</style>
+</html>
