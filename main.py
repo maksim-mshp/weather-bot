@@ -61,7 +61,8 @@ def reconnect():
 			autocommit = True
 		)
 		db = connection.cursor()
-
+		db.execute('SET session wait_timeout=31536000;')
+		db.execute('SET session interactive_timeout=31536000;')
 		sleep(27000)
 
 connection = sql.connect(
@@ -99,8 +100,12 @@ def send_idk(uuid):
 def get_screen(uuid):
 	st = "SELECT screen FROM wb_users WHERE tg_id = %s"
 	vals = [uuid]
+	now = datetime.now()
+	logger.warning(str(now.isoformat()) + ' ' + str(st) + ' ' + str(vals))
+	logger.warning(uuid)
 	db.execute(st, vals)
 	db_res = db.fetchall()[0][0]
+	logger.warning(db_res)
 
 	if (db_res[0] != '9'):
 		res = int(db_res)
@@ -197,8 +202,6 @@ def set_city(uuid, text):
 	except AttributeError:
 		bot.send_message(uuid, f"Неверно указан город, попробуйте ещё раз ❌", reply_markup = no_kb)
 		set_screen(uuid, 1)
-	except GeocoderUnavailable:
-		pass
 
 def save_new_name(uuid, name, c_id, msg_id):
 	st = 'UPDATE wb_clothes SET name = %s WHERE id = %s'
@@ -295,7 +298,7 @@ def activate(message):
 	res = db.fetchall()
 
 	send_success(uuid)
-@bot.message_handler(commands=['setlocation'])
+@bot.message_handler(commands=['set_location'])
 def setlocation(message):
 	global uuid
 	uuid = message.chat.id
@@ -431,6 +434,26 @@ def add_clothes(message):
 		set_screen(uuid, 2)
 		bot.send_message(uuid, text, reply_markup = no_kb)
 
+@bot.message_handler(commands=['get_api_token'])
+def get_api_key(message):
+	import random
+	import string
+	global uuid
+	uuid = message.chat.id
+
+	token = ''.join(random.sample(string.ascii_letters + string.digits, 32))
+	st = 'INSERT INTO wb_api_tokens (user, token) VALUES (%s, %s)'
+	vals = [uuid, token]
+	db.execute(st, vals)
+	confirm()
+
+	text = 'Ваш токен для доступа к API: ```' + token + '```\n\n'
+	text += '⚠ Внимание! Храните токен в секрете, с помощью него любой может получить доступ к Вашим данным.'
+
+	bot.send_message(uuid, text, reply_markup=main_kb, parse_mode="markdown")
+
+	
+
 def choose_type(uuid, name, edit=False, msg_id=-1, thing_id=-1):
 	if check_active(uuid):
 		set_screen(uuid, 0)
@@ -445,7 +468,7 @@ def choose_type(uuid, name, edit=False, msg_id=-1, thing_id=-1):
 			db.execute(st)
 			thing_id = db.fetchall()[0][0]
 
-		msg = f"Выберете тип и вид одежды.\n\n<u><b>Название:</b></u> {name}\nТип:"
+		msg = f"Выберите тип и вид одежды.\n\n<u><b>Название:</b></u> {name}\nТип:"
 		buttons = (
 			{'text': 'Головной убор', 'callback': '{"func":"headdress","id":' + str(thing_id) + '}'},
 			{'text': 'Верхняя одежда', 'callback': '{"func":"outerwear","id":' + str(thing_id) + '}'},
@@ -479,7 +502,7 @@ def answer(call):
 		if (data['func'] == 'headdress'):
 			set_type(data['id'], 0)
 			c_type = 0
-			msg = f"Отлично 👍\nТеперь выберете тип и вид одежды.\n\n<u><b>Название:</b></u> {c_name}\n<u><b>Тип:</b></u> Головной убор\n\nВид:"
+			msg = f"Отлично 👍\nТеперь выберите тип и вид одежды.\n\n<u><b>Название:</b></u> {c_name}\n<u><b>Тип:</b></u> Головной убор\n\nВид:"
 
 			buttons = (
 				{'text': 'Тёплая шапка', 'callback': '{"func":"addc01","id":' + str(data['id']) + '}'},
@@ -497,7 +520,7 @@ def answer(call):
 		elif (data['func'] == 'outerwear'):
 			set_type(data['id'], 2)
 			c_type = 2
-			msg = f"Отлично 👍\nТеперь выберете тип и вид одежды.\n\n<u><b>Название:</b></u> {c_name}\n<u><b>Тип:</b></u> Верхняя одежда\n\nВид:"
+			msg = f"Отлично 👍\nТеперь выберите тип и вид одежды.\n\n<u><b>Название:</b></u> {c_name}\n<u><b>Тип:</b></u> Верхняя одежда\n\nВид:"
 
 			buttons = (
 				{'text': 'Очень тёплая куртка', 'callback': '{"func":"addc20","id":' + str(data['id']) + '}'},
@@ -517,7 +540,7 @@ def answer(call):
 		elif (data['func'] == 'pants'):
 			set_type(data['id'], 3)
 			c_type = 3
-			msg = f"Отлично 👍\nТеперь выберете тип и вид одежды.\n\n<u><b>Название:</b></u> {c_name}\n<u><b>Тип:</b></u> Штаны\n\nВид:"
+			msg = f"Отлично 👍\nТеперь выберите тип и вид одежды.\n\n<u><b>Название:</b></u> {c_name}\n<u><b>Тип:</b></u> Штаны\n\nВид:"
 
 			buttons = (
 				{'text': 'Тёплые штаны', 'callback': '{"func":"addc30","id":' + str(data['id']) + '}'},
@@ -533,7 +556,7 @@ def answer(call):
 		elif (data['func'] == 'shoes'):
 			set_type(data['id'], 4)
 			c_type = 4
-			msg = f"Отлично 👍\nТеперь выберете тип и вид одежды.\n\n<u><b>Название:</b></u> {c_name}\n<u><b>Тип:</b></u> Обувь\n\nВид:"
+			msg = f"Отлично 👍\nТеперь выберите тип и вид одежды.\n\n<u><b>Название:</b></u> {c_name}\n<u><b>Тип:</b></u> Обувь\n\nВид:"
 
 			buttons = (
 				{'text': 'Сапоги', 'callback': '{"func":"addc40","id":' + str(data['id']) + '}'},
@@ -766,7 +789,7 @@ def start_bot():
 		lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
 		logger.warning(''.join(line for line in lines))
 
-		msg = '⚠ Произошла неизвестная ошибка, попробуйте позже.'
+		msg = '⚠ Произошла неизвестная ошибка, попробуйте позже или введите команду /start.'
 		bot.send_message(chat_id = uuid, text = msg, reply_markup = main_kb)
 		start_bot()
 

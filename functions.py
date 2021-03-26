@@ -125,7 +125,7 @@ def str_from_arr(array):
 
 def get_img_url(temp, feels_like, rain, snow):
 	av_temp = int((temp + feels_like) / 2)
-	link = 'https://maksim.cherny.sh/weather_bot_images/'
+	link = 'https://maksim.cherny.sh/weather_bot/images/'
 
 	if (snow):
 		link += '28.jpg'
@@ -344,4 +344,74 @@ def get_clothes_description(c_type, c_thing):
 		pass
 
 	return (d_type, d_thing)
+
+
+def generate_message_api(lat, lon, db, uuid):
+	url = f'https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&units=metric&lang=ru&exclude=minutely,daily,alerts&appid={weather_token}'
+	response = requests.get(url)
+	api_data = json.loads(response.text)
+
+	average_data = {
+		'weather': {
+			'temp': -1,
+			'feels_like': -1,
+			'humidity': -1,
+			'description': '',
+		}, 
+		'clothes': {
+			# 0 - ничего, 1 - теплая шапка, 2 - шапка зимняя, 3 - шапка, 4 - шапка (можно и без неё), 5 - кепка
+			'headdress': -1, 
+			'sweater': False,
+			# 0 - очень теплая, 1 - зимняя, 2 - ветровка, 3 - ветровка/худи, 4 - худи, 5 - футболка
+			'outerwear': -1,
+			# 0 - теплые, 1 - джинсы, 2 - шорты
+			'pants': -1,
+			# 0 - сапоги, 1 - теплые ботинки, 2 - ботинки/кроссовки, 3 - кроссовки
+			'shoes': -1,
+			'umbrella': False
+		}
+	}
+
+	# Средние значения
+	av = average_weather(api_data)
+	average_data['weather']['temp'] = av[0]
+	average_data['weather']['feels_like'] = av[1]
+	average_data['weather']['humidity'] = av[2]
+
+	weather_desc = get_weather_description(api_data)
+	average_data['weather']['description'] = weather_desc[0]
+	average_data['clothes']['umbrella'] = weather_desc[1]
+
+	clothes = get_clothes(av[0], av[1])
+
+	average_data['clothes']['headdress'] = clothes[0]
+	average_data['clothes']['sweater'] = clothes[1]
+	average_data['clothes']['outerwear'] = clothes[2]
+	average_data['clothes']['pants'] = clothes[3]
+	average_data['clothes']['shoes'] = clothes[4]
+
+	average_data['clothes']['headdress'] = get_clothes_description(0, average_data['clothes']['headdress'])[1]
+	average_data['clothes']['outerwear'] = get_clothes_description(2, average_data['clothes']['outerwear'])[1]
+	average_data['clothes']['pants'] = get_clothes_description(3, average_data['clothes']['pants'])[1]
+	average_data['clothes']['shoes'] = get_clothes_description(4, average_data['clothes']['shoes'])[1]
+
+	return average_data
+
+def get_user_clothes_api(data, uuid, db):
+	types = ('headdress', 'sweater', 'outerwear', 'pants', 'shoes')
+	result = []
+
+	for item, name in enumerate(types):
+		thing = data['clothes'][name]
+		st = 'SELECT name FROM wb_clothes WHERE type = %s and thing = %s and user = %s'
+		vals = [item, thing, uuid]
+		db.execute(st, vals)
+		tmp = []
+		for elem in db.fetchall():
+			tmp.append(elem[0])
+
+		if (tmp != []):
+			result.append(rand_arr(tmp))
+
+	return result
 
