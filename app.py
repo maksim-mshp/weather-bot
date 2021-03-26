@@ -69,7 +69,7 @@ def recommendations():
 		res['recommendations']['general'] = res['recommendations']['general']['clothes']
 
 
-	return jsonify(res)
+	return jsonify(res) 
 
 @app.route('/add_clothes', methods=['GET', 'POST'])
 def add_clothes():
@@ -401,6 +401,80 @@ def set_location():
 				res['status']['description'] = 'Expected latitude'
 
 	return jsonify(res)
+
+@app.route('/activate', methods=['GET', 'POST'])
+def activate():
+	connection = sql.connect(
+		user = db_config['user'],
+		password = db_config['password'],
+		unix_socket = db_config['unix_socket'],
+		database = db_config['database'],
+		autocommit = True
+	)
+	db = connection.cursor()
+
+	res = {
+		'status': {
+			'code': -1,
+			'description': -1
+		}
+	}
+ 
+	if ('token' in request.values):
+		token = request.values['token']
+		db.execute('SELECT user FROM wb_api_tokens WHERE token = %s', [token])
+		user = db.fetchall()
+		if (user != []):
+			res['status']['code'] = 200
+			res['status']['description'] = 'OK'
+			user = user[0][0]
+
+			db.execute("UPDATE wb_users SET `active` = true, `screen` = 0 WHERE tg_id = %s", [user])
+		else:
+			res['status']['code'] = 401
+			res['status']['description'] = 'Wrong API token'		
+	else:
+		res['status']['code'] = 401
+		res['status']['description'] = 'Wrong API token'
+	return jsonify(res)
+
+
+@app.route('/deactivate', methods=['GET', 'POST'])
+def deactivate():
+	connection = sql.connect(
+		user = db_config['user'],
+		password = db_config['password'],
+		unix_socket = db_config['unix_socket'],
+		database = db_config['database'],
+		autocommit = True
+	)
+	db = connection.cursor()
+
+	res = {
+		'status': {
+			'code': -1,
+			'description': -1
+		}
+	}
+ 
+	if ('token' in request.values):
+		token = request.values['token']
+		db.execute('SELECT user FROM wb_api_tokens WHERE token = %s', [token])
+		user = db.fetchall()
+		if (user != []):
+			res['status']['code'] = 200
+			res['status']['description'] = 'OK'
+			user = user[0][0]
+
+			db.execute("UPDATE wb_users SET `active` = false, `screen` = 0 WHERE tg_id = %s", [user])
+		else:
+			res['status']['code'] = 401
+			res['status']['description'] = 'Wrong API token'		
+	else:
+		res['status']['code'] = 401
+		res['status']['description'] = 'Wrong API token'
+	return jsonify(res) 
+	
 
 #adding variables
 @app.route('/user/<username>')

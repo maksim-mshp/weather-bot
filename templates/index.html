@@ -14,24 +14,49 @@
 
 	<h1>Weather Bot API</h1>
 	<p>
-		Для работы с API нужно получить токен. Для этого отправите боту
+		Для работы с API нужно получить токен. Для этого отправите <a href="https://t.me/chm_weather_bot">боту</a> 
 		команду /get_api_token.<br>
 		Данные можно отправлять как GET, так и POST запросом.
 	</p>
 	<p>
-		Содержание:
+	Содержание:
 	<nav>
-		<ol>
-			<li><a href="#recommendations">Получение рекомендации</a></li>
-			<li><a href="#clothes">Одежда пользователя</a></li>
-			<li><a href="#add_clothes">Добавление одежды</a></li>
-			<li><a href="#remove_clothes">Удаление одежды</a></li>
-			<li><a href="#edit_clothes">Редактирование одежды</a></li>
-			<li><a href="#set_location">Изменение местоположения</a></li>
-		</ol>
+		<ul>
+			<li><a href="#errors"><b>Общие коды ошибок</b></a></li>
+			<li><a href="#recommendations">1. Получение рекомендации</a></li>
+			<li><a href="#clothes">2. Одежда пользователя</a></li>
+			<li><a href="#add_clothes">3. Добавление одежды</a></li>
+			<li><a href="#remove_clothes">4. Удаление одежды</a></li>
+			<li><a href="#edit_clothes">5. Редактирование одежды</a></li>
+			<li><a href="#set_location">6. Изменение местоположения</a></li>
+			<li><a href="#activate-deactivate">7. Активация/деактивация аккаунта</a></li>
+		</ul>
 	</nav>
 	</p>
-
+	<h2 id="errors">Общие коды ошибок</h2>
+	<p>Помимо ошибок, котрые могут возникнуть в конкретном методе, существуют общие коды ошибок.</p>
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Код</th>
+				<th>Описание</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>200</td>
+				<td>Запрос успешно получен и обработан.</td>
+			</tr>
+			<tr>
+				<td>401</td>
+				<td>Неверный токен доступа к API. Проверьте токен или получите новый, для этого отправите <a href="https://t.me/chm_weather_bot">боту</a> команду /get_api_token.<br></td>
+			</tr>
+			<tr>
+				<td>402</td>
+				<td>Аккаунт деактивирован. Для активации отправьте <a href="https://t.me/chm_weather_bot">боту</a> команду /activate или возпользуйтесь <a href="#activate-deactivate">соответствующим методом</a>.</td>
+			</tr>
+		</tbody>
+	</table>
 	<h2 id="recommendations">1. Получение рекомендации</h2>
 	<p>
 		<a
@@ -499,7 +524,44 @@
 			</table>
 		</div>
 	</div>
+	<h2 id="activate-deactivate">7. Активация/деактивация аккаунта</h2>
+	<p>
+		Активация: <a
+			href="https://maksim.cherny.sh/weather_bot/api/activate">https://maksim.cherny.sh/weather_bot/api/activate</a><br />
+		Деактивация: <a
+		href="https://maksim.cherny.sh/weather_bot/api/deactivate">https://maksim.cherny.sh/weather_bot/api/deactivate</a><br />
+	</p>
+	<div class="wrapper">
+		<div>
+			Параметры:
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Ключ</th>
+						<th>Значение</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>token</td>
+						<td>Токен доступа к API</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div>
+			Пример ответа:
+			<pre style="width: 500px;"><code class="language-json">{
+	"status": {
+		"code": 200,
+		"description": "OK"
+	}
+}</code></pre>
+		</div>
+	</div>
+
 	<div id="upbutton"></div>
+	<footer></footer>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
