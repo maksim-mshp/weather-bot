@@ -28,11 +28,11 @@ body {
     justify-content: space-between;
 }
 
-li {
+nav ul li {
 	list-style-type: none; /* Убираем маркеры */
 }
 
-ul {
+nav ul {
 	margin-left: 0; /* Отступ слева в браузере IE и Opera */
 	padding-left: 0 !important; /* Отступ слева в браузере Firefox, Safari, Chrome */
 }

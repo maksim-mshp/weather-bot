@@ -112,10 +112,11 @@ def add_clothes():
 						update_res(403, 'Wrong title')
 						return jsonify(res)
 
-					types = ('headdress', 'outerwear', 'pants', 'shoes')
+					types = ('headdress', '', 'outerwear', 'pants', 'shoes')
 					things = (
-						('warm', 'winter', 'hat', 'optional', 'cap'),
-						('warm', 'winter', 'coat', 'sweater', 'selectable', 'hoodie', 't-shirt'),
+						('', 'warm', 'winter', 'hat', 'optional', 'cap'),
+						(),
+						('warm', 'winter', 'coat', 'selectable', 'hoodie', 't-shirt', 'sweater'),
 						('warm', 'jeans', 'shorts'),
 						('warm', 'boots', 'selectable', 'sneakers')
 					)
@@ -124,11 +125,11 @@ def add_clothes():
 						try:
 							c_thing = things[c_type].index(c_thing)
 
-							if (c_type == 1 and c_thing == 3):
+							if (c_type == 2 and c_thing == 6):
+								c_type = 1
 								c_thing = 1
-							else:
-								c_type += 1
-
+        
+        
 							st = "INSERT INTO wb_clothes (user, name, type, thing) VALUES (%s, %s, %s, %s)"
 							vals = [user, c_title, c_type, c_thing]
 							db.execute(st, vals)
@@ -269,10 +270,11 @@ def edit_clothes():
 							logging.info('name edited')
 
 						if (tmp[1]):
-							types = ('headdress', 'outerwear', 'pants', 'shoes')
+							types = ('headdress', '', 'outerwear', 'pants', 'shoes')
 							things = (
-								('warm', 'winter', 'hat', 'optional', 'cap'),
-								('warm', 'winter', 'coat', 'sweater', 'selectable', 'hoodie', 't-shirt'),
+								('', 'warm', 'winter', 'hat', 'optional', 'cap'),
+								(),
+								('warm', 'winter', 'coat', 'selectable', 'hoodie', 't-shirt', 'sweater'),
 								('warm', 'jeans', 'shorts'),
 								('warm', 'boots', 'selectable', 'sneakers')
 							)
@@ -281,10 +283,9 @@ def edit_clothes():
 								try:
 									c_thing = things[c_type].index(c_thing)
 
-									if (c_type == 1 and c_thing == 3):
+									if (c_type == 2 and c_thing == 6):
+										c_type = 1
 										c_thing = 1
-									else:
-										c_type += 1
 		  
 									st = "UPDATE wb_clothes SET type = %s, thing = %s WHERE id = %s AND user = %s"
 									vals = [c_type, c_thing, int(c_id), user] 
